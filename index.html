@@ -10,7 +10,7 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // *** ค่า Config Firebase ของคุณ ***
+        // ค่า Config Firebase ของคุณ
         const firebaseConfig = {
             apiKey: "AIzaSyAqIe0iTNKcr0_4DsT9vfs5pMjca01L0AA",
             authDomain: "tdkjc-manga.firebaseapp.com",
@@ -64,7 +64,6 @@
                     console.error(error);
                 });
             } else {
-                // ล็อกอินด้วย Google Popup
                 signInWithPopup(auth, provider)
                     .then((result) => {
                         alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
@@ -186,7 +185,7 @@
                 });
             } catch (error) {
                 console.error(error);
-                grid.innerHTML = '<p style="color: #f44336; grid-column: 1/-1; text-align: center;">ไม่สามารถโหลดข้อมูลได้ โปรดตรวจสอบการตั้งค่า Firebase</p>';
+                grid.innerHTML = `<p style="color: #f44336; grid-column: 1/-1; text-align: center;">ไม่สามารถโหลดข้อมูลได้: ${error.message}</p>`;
             }
         }
 
