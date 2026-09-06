@@ -237,7 +237,7 @@
                 <a id="home-link">หน้าแรก</a>
                 <a id="nav-action-btn">เพิ่มมังงะของคุณ</a>
                 
-                <!-- ส่วนล็อกอินด้วยอีเมล/รหัสผ่าน -->
+                <!-- ส่วนระบบสมาชิก (Email/Password) -->
                 <div id="auth-container">
                     <div class="auth-box" id="login-form-box">
                         <input type="email" id="auth-email" placeholder="อีเมล...">
@@ -322,9 +322,10 @@
         <div class="manga-pages" id="reader-pages-container"></div>
     </div>
 
-    <!-- โค้ด Firebase และการจัดการเว็บ (Email/Password Auth) -->
+    <!-- โค้ด Firebase และการจัดการเว็บไซต์ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -339,6 +340,7 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
@@ -354,7 +356,7 @@
             window.scrollTo(0, 0);
         }
 
-        // เช็กสถานะล็อกอิน
+        // ตรวจสอบสถานะการล็อกอิน
         onAuthStateChanged(auth, (user) => {
             let loginFormBox = document.getElementById('login-form-box');
             let userInfoBox = document.getElementById('user-info-box');
@@ -456,7 +458,7 @@
             }
         });
 
-        // โหลดหน้าเนื้อหามังงะ
+        // โหลดหน้าเนื้อมังงะ
         document.getElementById('pages-file-input').addEventListener('change', (event) => {
             let files = event.target.files;
             let preview = document.getElementById('pages-preview');
