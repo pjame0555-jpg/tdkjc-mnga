@@ -25,6 +25,8 @@
             padding: 15px 5%;
             background-color: #1f1f1f;
             border-bottom: 1px solid #333;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .logo {
@@ -37,7 +39,8 @@
         nav {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
         nav a, nav span {
@@ -49,6 +52,26 @@
 
         nav a:hover {
             color: #ff9800;
+        }
+
+        .auth-box {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: #2b2b2b;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+
+        .auth-box input {
+            padding: 5px 8px;
+            background-color: #1a1a1a;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            width: 130px;
         }
 
         .container {
@@ -103,11 +126,11 @@
             display: inline-block;
             background-color: #ff9800;
             color: #121212;
-            padding: 8px 12px;
+            padding: 6px 12px;
             border-radius: 4px;
             text-decoration: none;
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             border: none;
             cursor: pointer;
             text-transform: uppercase;
@@ -194,14 +217,6 @@
             display: block;
         }
 
-        .chapter-footer {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            padding: 30px;
-            background-color: #1f1f1f;
-        }
-
         footer {
             text-align: center;
             padding: 20px;
@@ -218,11 +233,23 @@
     <div id="home-view">
         <header>
             <div class="logo">TDKJC MANGA 📖</div>
-            <nav id="nav-menu">
+            <nav>
                 <a id="home-link">หน้าแรก</a>
-                <span id="user-display" style="color: #ff9800; display: none;"></span>
                 <a id="nav-action-btn">เพิ่มมังงะของคุณ</a>
-                <a id="auth-btn">เข้าสู่ระบบด้วย Google</a>
+                
+                <!-- ส่วนล็อกอินด้วยอีเมล/รหัสผ่าน -->
+                <div id="auth-container">
+                    <div class="auth-box" id="login-form-box">
+                        <input type="email" id="auth-email" placeholder="อีเมล...">
+                        <input type="password" id="auth-password" placeholder="รหัสผ่าน (6 ตัวขึ้นไป)">
+                        <button class="btn" id="login-btn">เข้าสู่ระบบ</button>
+                        <button class="btn" id="register-btn" style="background-color: #4CAF50; color: #fff;">สมัครสมาชิก</button>
+                    </div>
+                    <div id="user-info-box" style="display: none; align-items: center; gap: 10px;">
+                        <span id="user-display" style="color: #ff9800; font-size: 0.9rem;"></span>
+                        <button class="btn" id="logout-btn" style="background-color: #f44336; color: #fff;">ออกจากระบบ</button>
+                    </div>
+                </div>
             </nav>
         </header>
 
@@ -295,10 +322,10 @@
         <div class="manga-pages" id="reader-pages-container"></div>
     </div>
 
-    <!-- โค้ด Firebase และการจัดการเว็บ -->
+    <!-- โค้ด Firebase และการจัดการเว็บ (Email/Password Auth) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -313,14 +340,12 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
         const db = getFirestore(app);
 
         let tempCoverBase64 = '';
         let tempPagesBase64 = [];
         let currentMangaData = [];
 
-        // ฟังก์ชันเปลี่ยนหน้า
         function showHome() {
             document.getElementById('reader-view').style.display = 'none';
             document.getElementById('add-view').style.display = 'none';
@@ -329,48 +354,74 @@
             window.scrollTo(0, 0);
         }
 
-        // ตรวจสอบสถานะล็อกอิน
+        // เช็กสถานะล็อกอิน
         onAuthStateChanged(auth, (user) => {
+            let loginFormBox = document.getElementById('login-form-box');
+            let userInfoBox = document.getElementById('user-info-box');
             let userDisplay = document.getElementById('user-display');
-            let authBtn = document.getElementById('auth-btn');
 
             if (user) {
-                userDisplay.style.display = 'inline';
-                userDisplay.innerText = `ผู้ใช้: ${user.displayName || user.email}`;
-                authBtn.innerText = 'ออกจากระบบ';
+                loginFormBox.style.display = 'none';
+                userInfoBox.style.display = 'flex';
+                userDisplay.innerText = `ผู้ใช้: ${user.email}`;
             } else {
-                userDisplay.style.display = 'none';
-                authBtn.innerText = 'เข้าสู่ระบบด้วย Google';
+                loginFormBox.style.display = 'flex';
+                userInfoBox.style.display = 'none';
+                userDisplay.innerText = '';
             }
         });
 
-        // ผูกปุ่มเข้าสู่ระบบ/ออกจากระบบ
-        document.getElementById('auth-btn').addEventListener('click', async () => {
-            let user = auth.currentUser;
-            if (user) {
-                try {
-                    await signOut(auth);
-                    alert('ออกจากระบบเรียบร้อยแล้ว');
-                    showHome();
-                } catch (error) {
-                    console.error(error);
-                }
-            } else {
-                try {
-                    await signInWithPopup(auth, provider);
-                    alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
-                    showHome();
-                } catch (error) {
-                    alert('เข้าสู่ระบบไม่สำเร็จ: กรุณาตรวจสอบการตั้งค่า Authorized domains ใน Firebase Console (' + error.message + ')');
-                }
+        // สมัครสมาชิก
+        document.getElementById('register-btn').addEventListener('click', async () => {
+            let email = document.getElementById('auth-email').value.trim();
+            let password = document.getElementById('auth-password').value.trim();
+
+            if (!email || !password) {
+                alert('กรุณากรอกอีเมลและรหัสผ่านสำหรับสมัครสมาชิก!');
+                return;
+            }
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert('สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!');
+            } catch (error) {
+                alert('สมัครสมาชิกไม่สำเร็จ: ' + error.message);
             }
         });
 
-        // จัดการปุ่มเพิ่มมังงะ
+        // เข้าสู่ระบบ
+        document.getElementById('login-btn').addEventListener('click', async () => {
+            let email = document.getElementById('auth-email').value.trim();
+            let password = document.getElementById('auth-password').value.trim();
+
+            if (!email || !password) {
+                alert('กรุณากรอกอีเมลและรหัสผ่านเพื่อเข้าสู่ระบบ!');
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                alert('เข้าสู่ระบบสำเร็จ!');
+            } catch (error) {
+                alert('เข้าสู่ระบบไม่สำเร็จ: อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+            }
+        });
+
+        // ออกจากระบบ
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                alert('ออกจากระบบเรียบร้อยแล้ว');
+                showHome();
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
         function checkAuthAndAdd() {
             let user = auth.currentUser;
             if (!user) {
-                alert('กรุณาเข้าสู่ระบบด้วย Google ก่อนเพิ่มมังงะ!');
+                alert('กรุณาเข้าสู่ระบบก่อนเพิ่มมังงะ!');
             } else {
                 document.getElementById('home-view').style.display = 'none';
                 document.getElementById('add-view').style.display = 'block';
@@ -443,7 +494,7 @@
                     cover: tempCoverBase64,
                     chapter: chapter || 'ตอนที่ 1',
                     pages: tempPagesBase64.length > 0 ? tempPagesBase64 : [tempCoverBase64],
-                    author: user ? (user.displayName || user.email) : 'ไม่ระบุ',
+                    author: user ? user.email : 'ไม่ระบุ',
                     createdAt: new Date()
                 });
 
@@ -454,7 +505,6 @@
             }
         });
 
-        // โหลดรายการมังงะหน้าแรก
         async function loadMangas() {
             let grid = document.getElementById('manga-grid');
             grid.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">กำลังโหลดข้อมูลจากคลาวด์...</p>';
@@ -468,7 +518,7 @@
 
                 grid.innerHTML = '';
                 if (currentMangaData.length === 0) {
-                    grid.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">ยังไม่มีมังงะในระบบ เข้าสู่ระบบด้วย Google แล้วกดปุ่ม "เพิ่มมังงะ" เพื่อลงผลงานของคุณ!</p>';
+                    grid.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">ยังไม่มีมังงะในระบบ สมัครสมาชิก/เข้าสู่ระบบ แล้วกดปุ่ม "เพิ่มมังงะ" เพื่อลงผลงานของคุณ!</p>';
                     return;
                 }
 
@@ -486,7 +536,6 @@
                     grid.appendChild(card);
                 });
 
-                // ผูกอีเวนต์ปุ่มอ่านมังงะ
                 document.querySelectorAll('.read-manga-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         let index = e.target.getAttribute('data-index');
@@ -520,7 +569,6 @@
             window.scrollTo(0, 0);
         }
 
-        // โหลดข้อมูลครั้งแรกเมื่อเปิดเว็บ
         loadMangas();
     </script>
 </body>
