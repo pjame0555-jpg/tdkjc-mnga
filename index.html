@@ -8,10 +8,10 @@
     <!-- นำเข้า Firebase SDK (รุ่น Modular v10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // *** ค่า Config Firebase ที่แก้ไข API Key ให้ถูกต้องแล้ว ***
+        // *** ค่า Config Firebase ของคุณ ***
         const firebaseConfig = {
             apiKey: "AIzaSyAqIe0iTNKcr0_4DsT9vfs5pMjca01L0AA",
             authDomain: "tdkjc-manga.firebaseapp.com",
@@ -31,6 +31,17 @@
         let tempCoverBase64 = '';
         let tempPagesBase64 = [];
         let currentMangaData = [];
+
+        // ตรวจสอบผลลัพธ์หลังจากการ Redirect กลับมา
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result) {
+                    alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
+                }
+            }).catch((error) => {
+                console.error("Redirect Auth Error:", error);
+                alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
+            });
 
         // ตรวจสอบสถานะการล็อกอินแบบ Realtime
         onAuthStateChanged(auth, (user) => {
@@ -65,13 +76,8 @@
                     console.error(error);
                 });
             } else {
-                signInWithPopup(auth, provider)
-                    .then((result) => {
-                        alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
-                        showHome();
-                    }).catch((error) => {
-                        alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
-                    });
+                // เปลี่ยนมาใช้แบบ Redirect แทน Popup เพื่อป้องกันการถูกบล็อก
+                signInWithRedirect(auth, provider);
             }
         }
 
