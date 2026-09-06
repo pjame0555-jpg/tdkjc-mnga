@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TDKJC MANGA - เว็บไซต์อ่านมังงะ</title>
     
+    <!-- นำเข้า Firebase SDK (รุ่น Modular v10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ค่า Config Firebase ของคุณ
+        // *** ค่า Config Firebase ที่แก้ไข API Key ให้ถูกต้องแล้ว ***
         const firebaseConfig = {
             apiKey: "AIzaSyAqIe0iTNKcr0_4DsT9vfs5pMjca01L0AA",
             authDomain: "tdkjc-manga.firebaseapp.com",
@@ -430,6 +431,7 @@
 </head>
 <body>
 
+    <!-- หน้าแรก (HOME VIEW) -->
     <div id="home-view">
         <header>
             <div class="logo">TDKJC MANGA 📖</div>
@@ -455,6 +457,7 @@
         </footer>
     </div>
 
+    <!-- หน้าเพิ่มมังงะ (ADD MANGA VIEW) -->
     <div id="add-view">
         <header>
             <div class="logo">TDKJC MANGA 📖</div>
@@ -499,6 +502,7 @@
         </footer>
     </div>
 
+    <!-- หน้าอ่านมังงะ (READER VIEW) -->
     <div id="reader-view">
         <div class="reader-nav">
             <button class="btn" onclick="showHome()">⬅ กลับหน้าแรก</button>
