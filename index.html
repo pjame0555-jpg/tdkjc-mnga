@@ -8,7 +8,7 @@
     <!-- นำเข้า Firebase SDK (รุ่น Modular v10) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // *** ค่า Config Firebase ของคุณ ***
@@ -23,25 +23,16 @@
         };
 
         // เริ่มต้นใช้งาน Firebase
+        console.log("Initializing Firebase...");
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
         const db = getFirestore(app);
+        console.log("Firebase initialized successfully.");
 
         let tempCoverBase64 = '';
         let tempPagesBase64 = [];
         let currentMangaData = [];
-
-        // ตรวจสอบผลลัพธ์หลังจากการ Redirect กลับมา
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result) {
-                    alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
-                }
-            }).catch((error) => {
-                console.error("Redirect Auth Error:", error);
-                alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
-            });
 
         // ตรวจสอบสถานะการล็อกอินแบบ Realtime
         onAuthStateChanged(auth, (user) => {
@@ -49,10 +40,12 @@
             let authBtn = document.getElementById('auth-btn');
 
             if (user) {
+                console.log("User logged in:", user.email);
                 userDisplay.style.display = 'inline';
                 userDisplay.innerText = `ผู้ใช้: ${user.displayName || user.email}`;
                 authBtn.innerText = 'ออกจากระบบ';
             } else {
+                console.log("User not logged in.");
                 userDisplay.style.display = 'none';
                 authBtn.innerText = 'เข้าสู่ระบบด้วย Google';
             }
@@ -66,18 +59,31 @@
             window.scrollTo(0, 0);
         }
 
-        window.handleAuthClick = function() {
+        // ฟังชันก์ล็อกอิน (กลับมาใช้ Popup แต่ใส่ Log เพื่อเช็กการทำงาน)
+        window.handleAuthClick = async function() {
+            console.log("Auth button clicked!");
             let user = auth.currentUser;
             if (user) {
-                signOut(auth).then(() => {
+                console.log("Signing out...");
+                try {
+                    await signOut(auth);
                     alert('ออกจากระบบเรียบร้อยแล้ว');
                     showHome();
-                }).catch((error) => {
-                    console.error(error);
-                });
+                } catch (error) {
+                    console.error("Sign out error:", error);
+                }
             } else {
-                // เปลี่ยนมาใช้แบบ Redirect แทน Popup เพื่อป้องกันการถูกบล็อก
-                signInWithRedirect(auth, provider);
+                console.log("Opening Google Sign-In Popup...");
+                try {
+                    let result = await signInWithPopup(auth, provider);
+                    console.log("Sign-in success:", result.user);
+                    alert('เข้าสู่ระบบด้วย Google สำเร็จ!');
+                    showHome();
+                } catch (error) {
+                    console.error("Sign-in error code:", error.code);
+                    console.error("Sign-in error message:", error.message);
+                    alert('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ' + error.message);
+                }
             }
         }
 
@@ -404,6 +410,7 @@
         }
 
         .manga-pages {
+            title { text-transform: uppercase; }
             display: flex;
             flex-direction: column;
             align-items: center;
